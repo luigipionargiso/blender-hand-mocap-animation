@@ -10,8 +10,8 @@ class TrackingPanel(DefaultPanel, bpy.types.Panel):
     def draw(self, context):
         layout = self.layout
 
-        layout.prop(context.scene.handtracktool, "camera_device_slot")
-        layout.prop(context.scene.handtracktool, "skip_frames")
+        layout.prop(context.scene.hta, "camera_device_slot")
+        layout.prop(context.scene.hta, "skip_frames")
 
 
 def register():
