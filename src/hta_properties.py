@@ -38,6 +38,8 @@ class HTA_Properties(bpy.types.PropertyGroup):
         type=bpy.types.Collection,
     )
 
+    modal_is_active: bpy.props.BoolProperty(default=False)
+
 
 def register():
     bpy.utils.register_class(HTA_Properties)

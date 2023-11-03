@@ -1,5 +1,6 @@
-from .src.panels import panels_registration
 from .src import hta_properties
+from .src.tracking_operator import tracking_operator
+from .src.panels import panels
 
 
 bl_info = {
@@ -13,18 +14,18 @@ bl_info = {
     "category": "Animation",
 }
 
-classes = [hta_properties, panels_registration]
+modules = [hta_properties, tracking_operator, panels]
 
 
 def register():
-    for cls in classes:
-        if cls is None:
+    for mod in modules:
+        if mod is None:
             continue
-        cls.register()
+        mod.register()
 
 
 def unregister():
-    for cls in reversed(classes):
-        if cls is None:
+    for mod in reversed(modules):
+        if mod is None:
             continue
-        cls.unregister()
+        mod.unregister()
