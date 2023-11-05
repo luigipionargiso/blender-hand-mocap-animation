@@ -1,5 +1,5 @@
 from .src import hta_properties
-from .src.tracking_operator import tracking_operator
+from .src.operators import tracking_operator
 from .src.panels import panels
 
 
