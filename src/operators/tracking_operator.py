@@ -38,6 +38,9 @@ class HTA_OT_TrackingOperator(bpy.types.Operator):
             frame.flags.writeable = False
             results = self._hands.process(frame)
 
+            wrist_centered = subtract_wrist_coordinates(results.multi_hand_world_landmarks)
+            set_position_keyframes(wrist_centered)
+
             # Draw the hand annotations on the image.
             frame.flags.writeable = True
             frame = cv.cvtColor(frame, cv.COLOR_RGB2BGR)
