@@ -38,8 +38,10 @@ class HTA_OT_TrackingOperator(bpy.types.Operator):
             frame.flags.writeable = False
             results = self._hands.process(frame)
 
-            wrist_centered = subtract_wrist_coordinates(results.multi_hand_world_landmarks)
-            set_position_keyframes(wrist_centered)
+            hta_hands = copy_to_hta_custom_structure(results)
+            hta_hands = calculate_positions(hta_hands)
+            set_position_keyframes(hta_hands, 1)
+            calculate_hands_orientation(hta_hands)
 
             # Draw the hand annotations on the image.
             frame.flags.writeable = True
