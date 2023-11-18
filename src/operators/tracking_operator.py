@@ -1,7 +1,8 @@
 import bpy
 import cv2 as cv
 import mediapipe as mp
-from .empties_manager import *
+from .empties_manager import create_empties_hierarchy, set_keyframes
+from .core_operations import *
 
 
 class HTA_OT_TrackingOperator(bpy.types.Operator):
@@ -24,27 +25,29 @@ class HTA_OT_TrackingOperator(bpy.types.Operator):
     def modal(self, context, event):
         if event.type == "TIMER":
             success, frame = self._cap.read()
-            # if success:
-            #    cv.imshow("Camera stream", frame)
+
             if not success:
                 print("Ignoring empty camera frame.")
                 return {"PASS_THROUGH"}
 
-            # Flip the image horizontally for a later selfie-view display, and convert
-            # the BGR image to RGB.
+            # Flip the image horizontally and convert the BGR image to RGB
             frame = cv.cvtColor(cv.flip(frame, 1), cv.COLOR_BGR2RGB)
+
             # To improve performance, optionally mark the image as not writeable to
-            # pass by reference.
+            # pass by reference
             frame.flags.writeable = False
             results = self._hands.process(frame)
-
-            hta_hands = copy_to_hta_custom_structure(results)
-            hta_hands = calculate_positions(hta_hands)
-            set_position_keyframes(hta_hands, 1)
-            calculate_hands_orientation(hta_hands)
-
-            # Draw the hand annotations on the image.
             frame.flags.writeable = True
+
+            hta_hands = copy_to_hma_custom_structure(results)
+            calculate_positions(hta_hands)
+            calculate_hands_orientation(hta_hands)
+            calculate_rotations(hta_hands)
+
+            # set position and rotation keyframes in empties
+            set_keyframes(hta_hands, 1)
+
+            # Draw the hand annotations on the image
             frame = cv.cvtColor(frame, cv.COLOR_RGB2BGR)
             if results.multi_hand_landmarks:
                 for hand_landmarks in results.multi_hand_landmarks:
@@ -101,13 +104,17 @@ class HTA_OT_TrackingOperator(bpy.types.Operator):
 
         # Create a hands object
         self._hands = self.mp_hands.Hands(
-            min_detection_confidence=0.5, min_tracking_confidence=0.5
+            model_complexity=1,
+            static_image_mode=False,
+            max_num_hands=2,
+            min_detection_confidence=0.5,
+            min_tracking_confidence=0.5,
         )
 
         # Call the __enter__() method
         self._hands.__enter__()
 
-        create_empty_in_collection()
+        create_empties_hierarchy()
 
         context.window_manager.modal_handler_add(self)
 

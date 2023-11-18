@@ -4,9 +4,9 @@ from .src.panels import panels
 
 
 bl_info = {
-    "name": "Hand tracking animate",
+    "name": "Hand Mocap Animation",
     "author": "Luigi Pio Nargiso",
-    "description": "",
+    "description": "A simple addon that uses markerless hand tracking to animate fingers in rigs",
     "blender": (3, 0, 0),
     "version": (0, 0, 1),
     "location": "3D View > Tool",
