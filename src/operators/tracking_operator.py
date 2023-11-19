@@ -5,10 +5,10 @@ from .empties_manager import create_empties_hierarchy, set_keyframes
 from .core_operations import *
 
 
-class HTA_OT_TrackingOperator(bpy.types.Operator):
-    """Toggle the tracking window"""
+class HMA_OT_TrackingOperator(bpy.types.Operator):
+    """Toggle the motion capture window"""
 
-    bl_idname = "hta.tracking_operator"
+    bl_idname = "hma.tracking_operator"
     bl_label = "Start tracking"
 
     _timer = None
@@ -129,8 +129,8 @@ class HTA_OT_TrackingOperator(bpy.types.Operator):
 
 
 def register():
-    bpy.utils.register_class(HTA_OT_TrackingOperator)
+    bpy.utils.register_class(HMA_OT_TrackingOperator)
 
 
 def unregister():
-    bpy.utils.unregister_class(HTA_OT_TrackingOperator)
+    bpy.utils.unregister_class(HMA_OT_TrackingOperator)

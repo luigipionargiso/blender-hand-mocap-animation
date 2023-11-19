@@ -1,23 +1,23 @@
 import bpy
 
 
-class HTA_Base_Panel:
+class HMA_Base_Panel:
     bl_space_type = "VIEW_3D"
     bl_region_type = "UI"
-    bl_category = "Hand Tracking Animation"
+    bl_category = "HMA"
 
 
-class HTA_PT_Main_Panel(HTA_Base_Panel, bpy.types.Panel):
+class HMA_PT_Main_Panel(HMA_Base_Panel, bpy.types.Panel):
     bl_idname = "UI_PT_main_panel"
-    bl_label = "Hand Tracking Animation"
+    bl_label = "Hand Mocap Animation"
 
     def draw(self, context):
         pass
 
 
-class HTA_PT_Tracking_Panel(HTA_Base_Panel, bpy.types.Panel):
+class HTA_PT_Tracking_Panel(HMA_Base_Panel, bpy.types.Panel):
     bl_parent_id = "UI_PT_main_panel"
-    bl_label = "Tracking"
+    bl_label = "Motion capture"
 
     def draw(self, context):
         layout = self.layout
@@ -28,15 +28,15 @@ class HTA_PT_Tracking_Panel(HTA_Base_Panel, bpy.types.Panel):
 
         if user.modal_is_active:
             layout.operator(
-                "hta.tracking_operator", text="Stop recording", icon="RADIOBUT_ON"
+                "hma.tracking_operator", text="Stop recording", icon="RADIOBUT_ON"
             )
         else:
             layout.operator(
-                "hta.tracking_operator", text="Start recording", icon="RADIOBUT_OFF"
+                "hma.tracking_operator", text="Start recording", icon="RADIOBUT_OFF"
             )
 
 
-class HTA_PT_Transfer_Panel(HTA_Base_Panel, bpy.types.Panel):
+class HMA_PT_Transfer_Panel(HMA_Base_Panel, bpy.types.Panel):
     bl_parent_id = "UI_PT_main_panel"
     bl_label = "Transfer animation"
 
@@ -62,7 +62,7 @@ class HTA_PT_Transfer_Panel(HTA_Base_Panel, bpy.types.Panel):
         )
 
 
-classes = [HTA_PT_Main_Panel, HTA_PT_Tracking_Panel, HTA_PT_Transfer_Panel]
+classes = [HMA_PT_Main_Panel, HTA_PT_Tracking_Panel, HMA_PT_Transfer_Panel]
 
 
 def register():

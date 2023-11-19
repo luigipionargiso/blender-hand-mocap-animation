@@ -1,7 +1,7 @@
 import bpy
 
 
-class HTA_Properties(bpy.types.PropertyGroup):
+class HMA_Properties(bpy.types.PropertyGroup):
     camera_device_slot: bpy.props.IntProperty(
         name="Camera device slot",
         description="Select the index of the capture device",
@@ -11,7 +11,7 @@ class HTA_Properties(bpy.types.PropertyGroup):
 
     skip_frames: bpy.props.IntProperty(
         name="Skip frames",
-        description="Number of frames to skip for each step",
+        description="Number of frames to skip at each step",
         default=4,
         min=0,
         max=12,
@@ -42,10 +42,10 @@ class HTA_Properties(bpy.types.PropertyGroup):
 
 
 def register():
-    bpy.utils.register_class(HTA_Properties)
-    bpy.types.Scene.hta = bpy.props.PointerProperty(type=HTA_Properties)
+    bpy.utils.register_class(HMA_Properties)
+    bpy.types.Scene.hta = bpy.props.PointerProperty(type=HMA_Properties)
 
 
 def unregister():
     del bpy.types.Scene.hta
-    bpy.utils.unregister_class(HTA_Properties)
+    bpy.utils.unregister_class(HMA_Properties)

@@ -190,7 +190,7 @@ def calculate_thumb_rotations(landmark, hand, index):
 
         landmark.rotation_euler = np.array([x_angle, 0.0, 0.0])
 
-    elif "ip" in landmark.name:
+    elif "_ip" in landmark.name:
         dist_phalanx = hand.landmarks[index + 1].position - landmark.position
 
         # get the local coordinates
