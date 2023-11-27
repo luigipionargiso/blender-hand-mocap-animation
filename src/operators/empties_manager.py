@@ -1,4 +1,5 @@
 import bpy
+import numpy as np
 from ..landmarks_names import *
 
 
@@ -64,17 +65,38 @@ def add_map_range_values_as_custom_properties(obj):
     elif "tip" in obj.name:
         return
     elif "thumb_mcp" in obj.name:
-        pass
-    elif "mcp" in obj.name or "cmc" in obj.name:
-        obj["from_min_z"] = 0.0
-        obj["from_max_z"] = 1.0
-        obj["to_min_z"] = 0.0
-        obj["to_max_z"] = 1.0
-
-    obj["from_min_x"] = 0.0
-    obj["from_max_x"] = 1.0
-    obj["to_min_x"] = 0.0
-    obj["to_max_x"] = 1.0
+        obj["from_min_x"] = np.deg2rad(-10.0)
+        obj["from_max_x"] = np.deg2rad(10.0)
+        obj["to_min_x"] = np.deg2rad(-80.0)
+        obj["to_max_x"] = np.deg2rad(80.0)
+    elif "thumb_ip" in obj.name:
+        obj["from_min_x"] = np.deg2rad(-10.0)
+        obj["from_max_x"] = np.deg2rad(20.0)
+        obj["to_min_x"] = np.deg2rad(-30.0)
+        obj["to_max_x"] = np.deg2rad(90.0)
+    elif "mcp" in obj.name:
+        obj["from_min_x"] = np.deg2rad(-4.0)
+        obj["from_max_x"] = np.deg2rad(110.0)
+        obj["to_min_x"] = np.deg2rad(-40.0)
+        obj["to_max_x"] = np.deg2rad(90.0)
+        obj["from_min_z"] = np.deg2rad(-10.0)
+        obj["from_max_z"] = np.deg2rad(3.0)
+        obj["to_min_z"] = np.deg2rad(-20.0)
+        obj["to_max_z"] = np.deg2rad(20.0)
+    elif "cmc" in obj.name:
+        obj["from_min_x"] = np.deg2rad(-20.0)
+        obj["from_max_x"] = 0.0
+        obj["to_min_x"] = np.deg2rad(-45.0)
+        obj["to_max_x"] = np.deg2rad(20.0)
+        obj["from_min_z"] = np.deg2rad(2.0)
+        obj["from_max_z"] = np.deg2rad(16.0)
+        obj["to_min_z"] = np.deg2rad(-30.0)
+        obj["to_max_z"] = np.deg2rad(30.0)
+    else:
+        obj["from_min_x"] = np.deg2rad(5.0)
+        obj["from_max_x"] = np.deg2rad(130.0)
+        obj["to_min_x"] = np.deg2rad(0.0)
+        obj["to_max_x"] = np.deg2rad(90.0)
 
 
 def create_drivers_empties():
@@ -127,9 +149,8 @@ def add_driver_to_rotation(obj, axis):
 
     value = driver.variables.new()
     value.name = "value"
-    value.type = "TRANSFORMS"
     value.targets[0].id = target_obj
-    value.targets[0].transform_type = "ROT_X"
+    value.targets[0].data_path = f"rotation_euler.{axis}"
 
     from_min = driver.variables.new()
     from_min.name = f"from_min_{axis}"
@@ -161,3 +182,32 @@ def set_keyframes(hma_hands, frame_number):
             obj.rotation_euler = landmark.rotation_euler.tolist()
             obj.keyframe_insert(data_path="location", frame=frame_number)
             obj.keyframe_insert(data_path="rotation_euler", frame=frame_number)
+
+
+def demo_rotate_bones():
+    bones = {
+        "thumb.01": "thumb_cmc",
+        "thumb.02": "thumb_mcp",
+        "thumb.03": "thumb_ip",
+        "f_index.01": "index_finger_mcp",
+        "f_index.02": "index_finger_pip",
+        "f_index.03": "index_finger_dip",
+        "f_middle.01": "middle_finger_mcp",
+        "f_middle.02": "middle_finger_pip",
+        "f_middle.03": "middle_finger_dip",
+        "f_ring.01": "ring_finger_mcp",
+        "f_ring.02": "ring_finger_pip",
+        "f_ring.03": "ring_finger_dip",
+        "f_pinky.01": "pinky_mcp",
+        "f_pinky.02": "pinky_pip",
+        "f_pinky.03": "pinky_dip",
+    }
+    rig = bpy.data.objects["metarig"]
+    for handedness in ["L", "R"]:
+        for bone_name, lmk_name in bones.items():
+            empty_name = lmk_name + "." + handedness #+ ".D"
+
+            rotation = bpy.data.objects[empty_name].rotation_euler.copy()
+            rotation.z = 0
+
+            rig.pose.bones[bone_name + "." + handedness].rotation_euler = rotation

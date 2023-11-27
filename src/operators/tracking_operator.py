@@ -1,7 +1,7 @@
 import bpy
 import cv2 as cv
 import mediapipe as mp
-from .empties_manager import create_empties_hierarchy, set_keyframes
+from .empties_manager import create_empties_hierarchy, set_keyframes, demo_rotate_bones
 from .core_operations import *
 
 
@@ -46,6 +46,8 @@ class HMA_OT_TrackingOperator(bpy.types.Operator):
 
             # set position and rotation keyframes in empties
             set_keyframes(hta_hands, 1)
+
+            demo_rotate_bones()
 
             # Draw the hand annotations on the image
             frame = cv.cvtColor(frame, cv.COLOR_RGB2BGR)

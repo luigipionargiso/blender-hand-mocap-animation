@@ -146,6 +146,18 @@ def calculate_rotations(hma_hands):
 
                 landmark.rotation_euler = np.array([x_angle, 0.0, 0.0])
 
+    # invert x angles for the left hand
+    for hand in hma_hands:
+        if hand.handedness == "L":
+            for landmark in hand.landmarks:
+                if "wrist" in landmark.name:
+                    continue
+                elif "thumb" not in landmark.name:
+                    landmark.rotation_euler[0] *= -1.0
+                    landmark.rotation_euler[2] *= -1.0
+                elif "thumb_cmc" in landmark.name:
+                    landmark.rotation_euler[2] *= -1.0
+
 
 def calculate_thumb_rotations(landmark, hand, index):
     x_axis = np.array([1.0, 0.0, 0.0])
