@@ -72,20 +72,26 @@ def add_map_range_values_as_custom_properties(obj):
         obj["from_max_z"] = np.deg2rad(10.0)
         obj["to_min_z"] = np.deg2rad(-40.0)
         obj["to_max_z"] = np.deg2rad(40.0)
+        obj["offset_x"] = 0.0
+        obj["offset_z"] = 0.0
     elif "thumb_ip" in obj.name:
         obj["from_min_z"] = np.deg2rad(-10.0)
         obj["from_max_z"] = np.deg2rad(20.0)
         obj["to_min_z"] = np.deg2rad(-30.0)
         obj["to_max_z"] = np.deg2rad(90.0)
+        obj["offset_x"] = 0.0
+        obj["offset_z"] = 0.0
     elif "mcp" in obj.name:
         obj["from_min_z"] = np.deg2rad(-4.0)
-        obj["from_max_z"] = np.deg2rad(110.0)
-        obj["to_min_z"] = np.deg2rad(-40.0)
+        obj["from_max_z"] = np.deg2rad(140.0)
+        obj["to_min_z"] = np.deg2rad(-30.0)
         obj["to_max_z"] = np.deg2rad(90.0)
         obj["from_min_x"] = np.deg2rad(-5.0)
-        obj["from_max_x"] = np.deg2rad(5.0)
-        obj["to_min_x"] = np.deg2rad(-20.0)
-        obj["to_max_x"] = np.deg2rad(20.0)
+        obj["from_max_x"] = np.deg2rad(2.0)
+        obj["to_min_x"] = np.deg2rad(-15.0)
+        obj["to_max_x"] = np.deg2rad(15.0)
+        obj["offset_x"] = np.deg2rad(2.0)
+        obj["offset_z"] = 0.0
     elif "cmc" in obj.name:
         obj["from_min_z"] = np.deg2rad(-20.0)
         obj["from_max_z"] = 0.0
@@ -95,11 +101,27 @@ def add_map_range_values_as_custom_properties(obj):
         obj["from_max_x"] = np.deg2rad(16.0)
         obj["to_min_x"] = np.deg2rad(-30.0)
         obj["to_max_x"] = np.deg2rad(30.0)
+        obj["offset_x"] = 0.0
+        obj["offset_z"] = 0.0
+    elif "pip" in obj.name:
+        obj["from_min_z"] = np.deg2rad(-1.0)
+        obj["from_max_z"] = np.deg2rad(30.0)
+        obj["to_min_z"] = np.deg2rad(0.0)
+        obj["to_max_z"] = np.deg2rad(90.0)
+        obj["offset_z"] = 0.0
+    elif "dip" in obj.name:
+        obj["from_min_z"] = np.deg2rad(3.0)
+        obj["from_max_z"] = np.deg2rad(60.0)
+        obj["to_min_z"] = np.deg2rad(0.0)
+        obj["to_max_z"] = np.deg2rad(90.0)
+        obj["offset_x"] = 0.0
+        obj["offset_z"] = 0.0
     else:
         obj["from_min_z"] = np.deg2rad(5.0)
         obj["from_max_z"] = np.deg2rad(130.0)
         obj["to_min_z"] = np.deg2rad(0.0)
         obj["to_max_z"] = np.deg2rad(90.0)
+        obj["offset_z"] = 0.0
 
 
 def create_drivers_empties():
@@ -145,6 +167,7 @@ def add_driver_to_rotation(obj, axis):
         f"(( (value-2*pi ) if value > pi else value )-from_min_{axis})"
         f"*(to_max_{axis}-to_min_{axis})"
         f"/(from_max_{axis}-from_min_{axis})+to_min_{axis}"
+        f"+offset_{axis}"
     )
 
     target_obj = bpy.data.objects[obj.name[:-2]]
@@ -173,6 +196,11 @@ def add_driver_to_rotation(obj, axis):
     to_max.name = f"to_max_{axis}"
     to_max.targets[0].id = target_obj
     to_max.targets[0].data_path = f'["to_max_{axis}"]'
+
+    offset = driver.variables.new()
+    offset.name = f"offset_{axis}"
+    offset.targets[0].id = target_obj
+    offset.targets[0].data_path = f'["offset_{axis}"]'
 
 
 def set_keyframes(hma_hands, frame_number):
@@ -210,12 +238,13 @@ def demo_rotate_bones():
     rig = bpy.data.objects["metarig"]
     for handedness in ["L", "R"]:
         for bone_name, lmk_name in bones.items():
-            empty_name = lmk_name + "." + handedness + ".D"
+            empty_name = lmk_name + "." + handedness  # + ".D"
 
-            rotation = bpy.data.objects[empty_name].rotation_euler.copy()
+            hma_rot = bpy.data.objects[empty_name].rotation_euler
 
+            # rig.pose.bones[bone_name + "." + handedness].rotation_mode = "XYZ"
             rig.pose.bones[bone_name + "." + handedness].rotation_euler = [
-                rotation[2],
-                rotation[1],
-                rotation[0],
+                hma_rot[2],
+                hma_rot[1],
+                hma_rot[0],
             ]
