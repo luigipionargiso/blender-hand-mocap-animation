@@ -100,7 +100,7 @@ def calculate_rotations(hma_hands):
             # calculate thumb phalanxes rotations
             elif "thumb" in landmark.name:
                 pass
-                #calculate_thumb_rotations(landmark, i, hand)
+                # calculate_thumb_rotations(landmark, i, hand)
 
             # calculate all the other phalanxes rotations
             elif "mcp" in landmark.name:

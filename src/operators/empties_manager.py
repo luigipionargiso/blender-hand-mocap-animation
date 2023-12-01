@@ -238,7 +238,7 @@ def demo_rotate_bones():
     rig = bpy.data.objects["metarig"]
     for handedness in ["L", "R"]:
         for bone_name, lmk_name in bones.items():
-            empty_name = lmk_name + "." + handedness  # + ".D"
+            empty_name = lmk_name + "." + handedness # + ".D"
 
             hma_rot = bpy.data.objects[empty_name].rotation_euler
 

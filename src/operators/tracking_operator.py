@@ -3,6 +3,7 @@ import cv2 as cv
 import mediapipe as mp
 from .empties_manager import create_empties_hierarchy, set_keyframes, demo_rotate_bones
 from .core_operations import *
+from .smoothing import smooth_landmarks_over_time
 
 
 class HMA_OT_TrackingOperator(bpy.types.Operator):
@@ -38,6 +39,10 @@ class HMA_OT_TrackingOperator(bpy.types.Operator):
             frame.flags.writeable = False
             results = self._hands.process(frame)
             frame.flags.writeable = True
+
+            # smoothing landmarks position
+            for hand_landmarks in results.multi_hand_world_landmarks:
+                hand_landmarks = smooth_landmarks_over_time(hand_landmarks)
 
             hma_hands = copy_to_hma_custom_structure(results)
             calculate_positions(hma_hands)
