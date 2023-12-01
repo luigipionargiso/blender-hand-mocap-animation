@@ -39,13 +39,13 @@ class HMA_OT_TrackingOperator(bpy.types.Operator):
             results = self._hands.process(frame)
             frame.flags.writeable = True
 
-            hta_hands = copy_to_hma_custom_structure(results)
-            calculate_positions(hta_hands)
-            calculate_hands_orientation(hta_hands)
-            calculate_rotations(hta_hands)
+            hma_hands = copy_to_hma_custom_structure(results)
+            calculate_positions(hma_hands)
+            calculate_hands_orientation(hma_hands)
+            calculate_rotations(hma_hands)
 
             # set position and rotation keyframes in empties
-            set_keyframes(hta_hands, 1)
+            set_keyframes(hma_hands, 1)
 
             demo_rotate_bones()
 
@@ -57,6 +57,7 @@ class HMA_OT_TrackingOperator(bpy.types.Operator):
                         frame, hand_landmarks, self.mp_hands.HAND_CONNECTIONS
                     )
             cv.imshow("Camera stream", frame)
+            context.scene.hta.current_frame += context.scene.hta.skip_frames + 1
             cv.waitKey(1)
 
         elif event.type in {"ESC"}:
@@ -81,6 +82,8 @@ class HMA_OT_TrackingOperator(bpy.types.Operator):
             return {"FINISHED"}
         else:
             user.modal_is_active = True
+
+        user.current_frame = 0
 
         self._cap = cv.VideoCapture(user.camera_device_slot, cv.CAP_DSHOW)
 

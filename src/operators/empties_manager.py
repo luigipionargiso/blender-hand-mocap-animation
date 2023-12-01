@@ -51,6 +51,9 @@ def create_empties():
                 empty = bpy.context.object
                 empty.name = name
 
+                if "wrist" in name and handedness == "L":
+                    empty.scale = [1.0, 1.0, -1.0]
+
                 # add to the right collection
                 bpy.data.collections["hma_EMPTIES." + handedness].objects.link(empty)
                 # remove from the scene collection
@@ -65,38 +68,38 @@ def add_map_range_values_as_custom_properties(obj):
     elif "tip" in obj.name:
         return
     elif "thumb_mcp" in obj.name:
-        obj["from_min_x"] = np.deg2rad(-10.0)
-        obj["from_max_x"] = np.deg2rad(10.0)
-        obj["to_min_x"] = np.deg2rad(-80.0)
-        obj["to_max_x"] = np.deg2rad(80.0)
-    elif "thumb_ip" in obj.name:
-        obj["from_min_x"] = np.deg2rad(-10.0)
-        obj["from_max_x"] = np.deg2rad(20.0)
-        obj["to_min_x"] = np.deg2rad(-30.0)
-        obj["to_max_x"] = np.deg2rad(90.0)
-    elif "mcp" in obj.name:
-        obj["from_min_x"] = np.deg2rad(-4.0)
-        obj["from_max_x"] = np.deg2rad(110.0)
-        obj["to_min_x"] = np.deg2rad(-40.0)
-        obj["to_max_x"] = np.deg2rad(90.0)
         obj["from_min_z"] = np.deg2rad(-10.0)
-        obj["from_max_z"] = np.deg2rad(3.0)
-        obj["to_min_z"] = np.deg2rad(-20.0)
-        obj["to_max_z"] = np.deg2rad(20.0)
-    elif "cmc" in obj.name:
-        obj["from_min_x"] = np.deg2rad(-20.0)
-        obj["from_max_x"] = 0.0
-        obj["to_min_x"] = np.deg2rad(-45.0)
-        obj["to_max_x"] = np.deg2rad(20.0)
-        obj["from_min_z"] = np.deg2rad(2.0)
-        obj["from_max_z"] = np.deg2rad(16.0)
+        obj["from_max_z"] = np.deg2rad(10.0)
+        obj["to_min_z"] = np.deg2rad(-40.0)
+        obj["to_max_z"] = np.deg2rad(40.0)
+    elif "thumb_ip" in obj.name:
+        obj["from_min_z"] = np.deg2rad(-10.0)
+        obj["from_max_z"] = np.deg2rad(20.0)
         obj["to_min_z"] = np.deg2rad(-30.0)
-        obj["to_max_z"] = np.deg2rad(30.0)
+        obj["to_max_z"] = np.deg2rad(90.0)
+    elif "mcp" in obj.name:
+        obj["from_min_z"] = np.deg2rad(-4.0)
+        obj["from_max_z"] = np.deg2rad(110.0)
+        obj["to_min_z"] = np.deg2rad(-40.0)
+        obj["to_max_z"] = np.deg2rad(90.0)
+        obj["from_min_x"] = np.deg2rad(-5.0)
+        obj["from_max_x"] = np.deg2rad(5.0)
+        obj["to_min_x"] = np.deg2rad(-20.0)
+        obj["to_max_x"] = np.deg2rad(20.0)
+    elif "cmc" in obj.name:
+        obj["from_min_z"] = np.deg2rad(-20.0)
+        obj["from_max_z"] = 0.0
+        obj["to_min_z"] = np.deg2rad(-45.0)
+        obj["to_max_z"] = np.deg2rad(20.0)
+        obj["from_min_x"] = np.deg2rad(2.0)
+        obj["from_max_x"] = np.deg2rad(16.0)
+        obj["to_min_x"] = np.deg2rad(-30.0)
+        obj["to_max_x"] = np.deg2rad(30.0)
     else:
-        obj["from_min_x"] = np.deg2rad(5.0)
-        obj["from_max_x"] = np.deg2rad(130.0)
-        obj["to_min_x"] = np.deg2rad(0.0)
-        obj["to_max_x"] = np.deg2rad(90.0)
+        obj["from_min_z"] = np.deg2rad(5.0)
+        obj["from_max_z"] = np.deg2rad(130.0)
+        obj["to_min_z"] = np.deg2rad(0.0)
+        obj["to_max_z"] = np.deg2rad(90.0)
 
 
 def create_drivers_empties():
@@ -110,7 +113,7 @@ def create_drivers_empties():
                 empty = bpy.context.object
                 empty.name = name
 
-                # add to the right collection
+                # add to the appropriate collection
                 bpy.data.collections["hma_DRIVERS." + handedness].objects.link(empty)
                 # remove from the scene collection
                 bpy.context.collection.objects.unlink(empty)
@@ -126,11 +129,9 @@ def add_drivers(obj):
     elif "thumb_mcp" in obj.name:
         pass
     elif "mcp" in obj.name or "cmc" in obj.name:
-        # add driver to z euler rotation
-        add_driver_to_rotation(obj, "z")
+        add_driver_to_rotation(obj, "x")
 
-    # add driver to x rotation euler
-    add_driver_to_rotation(obj, "x")
+    add_driver_to_rotation(obj, "z")
 
 
 def add_driver_to_rotation(obj, axis):
@@ -141,7 +142,8 @@ def add_driver_to_rotation(obj, axis):
 
     driver.type = "SCRIPTED"
     driver.expression = (
-        f"(value-from_min_{axis})*(to_max_{axis}-to_min_{axis})"
+        f"(( (value-2*pi ) if value > pi else value )-from_min_{axis})"
+        f"*(to_max_{axis}-to_min_{axis})"
         f"/(from_max_{axis}-from_min_{axis})+to_min_{axis}"
     )
 
@@ -178,8 +180,11 @@ def set_keyframes(hma_hands, frame_number):
         for landmark in hand.landmarks:
             empty_name = landmark.name + "." + hand.handedness
             obj = bpy.data.objects[empty_name]
+
+            # multiply position by 10 for visualization
             obj.location = (landmark.position * 10).tolist()
             obj.rotation_euler = landmark.rotation_euler.tolist()
+
             obj.keyframe_insert(data_path="location", frame=frame_number)
             obj.keyframe_insert(data_path="rotation_euler", frame=frame_number)
 
@@ -205,9 +210,12 @@ def demo_rotate_bones():
     rig = bpy.data.objects["metarig"]
     for handedness in ["L", "R"]:
         for bone_name, lmk_name in bones.items():
-            empty_name = lmk_name + "." + handedness #+ ".D"
+            empty_name = lmk_name + "." + handedness + ".D"
 
             rotation = bpy.data.objects[empty_name].rotation_euler.copy()
-            rotation.z = 0
 
-            rig.pose.bones[bone_name + "." + handedness].rotation_euler = rotation
+            rig.pose.bones[bone_name + "." + handedness].rotation_euler = [
+                rotation[2],
+                rotation[1],
+                rotation[0],
+            ]

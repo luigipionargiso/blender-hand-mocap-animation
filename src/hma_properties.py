@@ -17,6 +17,13 @@ class HMA_Properties(bpy.types.PropertyGroup):
         max=12,
     )
 
+    current_frame: bpy.props.IntProperty(
+        name="Current frame",
+        description="Current frame processed",
+        default=0,
+        min=0,
+    )
+
     def is_armature(self, object):
         if object.type == "ARMATURE":
             return True
