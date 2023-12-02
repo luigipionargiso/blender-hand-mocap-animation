@@ -41,8 +41,9 @@ class HMA_OT_TrackingOperator(bpy.types.Operator):
             frame.flags.writeable = True
 
             # smoothing landmarks position
-            for hand_landmarks in results.multi_hand_world_landmarks:
-                hand_landmarks = smooth_landmarks_over_time(hand_landmarks)
+            if results.multi_hand_world_landmarks is not None:
+                for hand_landmarks in results.multi_hand_world_landmarks:
+                    hand_landmarks = smooth_landmarks_over_time(hand_landmarks)
 
             hma_hands = copy_to_hma_custom_structure(results)
             calculate_positions(hma_hands)

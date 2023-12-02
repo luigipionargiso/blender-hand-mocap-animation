@@ -238,13 +238,15 @@ def demo_rotate_bones():
     rig = bpy.data.objects["metarig"]
     for handedness in ["L", "R"]:
         for bone_name, lmk_name in bones.items():
-            empty_name = lmk_name + "." + handedness # + ".D"
+            empty_name = lmk_name + "." + handedness  # + ".D"
 
             hma_rot = bpy.data.objects[empty_name].rotation_euler
 
-            # rig.pose.bones[bone_name + "." + handedness].rotation_mode = "XYZ"
-            rig.pose.bones[bone_name + "." + handedness].rotation_euler = [
-                hma_rot[2],
-                hma_rot[1],
-                hma_rot[0],
-            ]
+            if "thumb" in bone_name:
+                rig.pose.bones[bone_name + "." + handedness].rotation_euler = hma_rot
+            else:
+                rig.pose.bones[bone_name + "." + handedness].rotation_euler = [
+                    hma_rot[2],
+                    hma_rot[1],
+                    hma_rot[0],
+                ]

@@ -4,7 +4,7 @@ from scipy.signal import savgol_filter
 landmarks_history = []
 
 
-def smooth_landmarks_over_time(landmarks, window_size=20, poly_order=3):
+def smooth_landmarks_over_time(landmarks, window_size=15, poly_order=3):
     global landmarks_history
 
     # Convert landmarks to numpy array and add to history
