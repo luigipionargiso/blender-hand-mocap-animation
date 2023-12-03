@@ -7,6 +7,7 @@ def create_empties_hierarchy():
     create_collections()
     create_empties()
     create_drivers_empties()
+    tune_rotations()
 
     # force drivers dependencies update
     for obj in bpy.context.scene.objects:
@@ -59,69 +60,25 @@ def create_empties():
                 # remove from the scene collection
                 bpy.context.collection.objects.unlink(empty)
 
-                add_map_range_values_as_custom_properties(empty)
+                add_custom_properties(empty)
 
 
-def add_map_range_values_as_custom_properties(obj):
+def add_custom_properties(obj):
     if "wrist" in obj.name:
         return
     elif "tip" in obj.name:
         return
-    elif "thumb_mcp" in obj.name:
-        obj["from_min_z"] = np.deg2rad(-10.0)
-        obj["from_max_z"] = np.deg2rad(10.0)
-        obj["to_min_z"] = np.deg2rad(-40.0)
-        obj["to_max_z"] = np.deg2rad(40.0)
-        obj["offset_x"] = 0.0
-        obj["offset_z"] = 0.0
-    elif "thumb_ip" in obj.name:
-        obj["from_min_z"] = np.deg2rad(-10.0)
-        obj["from_max_z"] = np.deg2rad(20.0)
-        obj["to_min_z"] = np.deg2rad(-30.0)
-        obj["to_max_z"] = np.deg2rad(90.0)
-        obj["offset_x"] = 0.0
-        obj["offset_z"] = 0.0
-    elif "mcp" in obj.name:
-        obj["from_min_z"] = np.deg2rad(-4.0)
-        obj["from_max_z"] = np.deg2rad(140.0)
-        obj["to_min_z"] = np.deg2rad(-30.0)
-        obj["to_max_z"] = np.deg2rad(90.0)
-        obj["from_min_x"] = np.deg2rad(-5.0)
-        obj["from_max_x"] = np.deg2rad(2.0)
-        obj["to_min_x"] = np.deg2rad(-15.0)
-        obj["to_max_x"] = np.deg2rad(15.0)
-        obj["offset_x"] = np.deg2rad(2.0)
-        obj["offset_z"] = 0.0
-    elif "cmc" in obj.name:
-        obj["from_min_z"] = np.deg2rad(-20.0)
-        obj["from_max_z"] = 0.0
-        obj["to_min_z"] = np.deg2rad(-45.0)
-        obj["to_max_z"] = np.deg2rad(20.0)
-        obj["from_min_x"] = np.deg2rad(2.0)
-        obj["from_max_x"] = np.deg2rad(16.0)
-        obj["to_min_x"] = np.deg2rad(-30.0)
-        obj["to_max_x"] = np.deg2rad(30.0)
-        obj["offset_x"] = 0.0
-        obj["offset_z"] = 0.0
-    elif "pip" in obj.name:
-        obj["from_min_z"] = np.deg2rad(-1.0)
-        obj["from_max_z"] = np.deg2rad(30.0)
-        obj["to_min_z"] = np.deg2rad(0.0)
-        obj["to_max_z"] = np.deg2rad(90.0)
-        obj["offset_z"] = 0.0
-    elif "dip" in obj.name:
-        obj["from_min_z"] = np.deg2rad(3.0)
-        obj["from_max_z"] = np.deg2rad(60.0)
-        obj["to_min_z"] = np.deg2rad(0.0)
-        obj["to_max_z"] = np.deg2rad(90.0)
-        obj["offset_x"] = 0.0
-        obj["offset_z"] = 0.0
+    elif "thumb_mcp" in obj.name or "thumb_ip" in obj.name:
+        obj["Scale X"] = 1.0
+        obj["Offset X"] = 0.0
+    elif "thumb_cmc" in obj.name or "mcp" in obj.name:
+        obj["Scale X"] = 1.0
+        obj["Offset X"] = 0.0
+        obj["Scale Z"] = 1.0
+        obj["Offset Z"] = 0.0
     else:
-        obj["from_min_z"] = np.deg2rad(5.0)
-        obj["from_max_z"] = np.deg2rad(130.0)
-        obj["to_min_z"] = np.deg2rad(0.0)
-        obj["to_max_z"] = np.deg2rad(90.0)
-        obj["offset_z"] = 0.0
+        obj["Scale Z"] = 1.0
+        obj["Offset Z"] = 0.0
 
 
 def create_drivers_empties():
@@ -148,59 +105,54 @@ def add_drivers(obj):
         return
     elif "tip" in obj.name:
         return
-    elif "thumb_mcp" in obj.name:
-        pass
-    elif "mcp" in obj.name or "cmc" in obj.name:
-        add_driver_to_rotation(obj, "x")
-
-    add_driver_to_rotation(obj, "z")
+    elif "thumb_mcp" in obj.name or "thumb_ip" in obj.name:
+        add_driver_to_rotation(obj, "X")
+    elif "thumb_cmc" in obj.name or "mcp" in obj.name:
+        add_driver_to_rotation(obj, "X")
+        add_driver_to_rotation(obj, "Z")
+    else:
+        add_driver_to_rotation(obj, "Z")
 
 
 def add_driver_to_rotation(obj, axis):
-    if axis == "x":
+    if axis == "X":
         driver = obj.driver_add("rotation_euler", 0).driver
     else:
         driver = obj.driver_add("rotation_euler", 2).driver
 
     driver.type = "SCRIPTED"
-    driver.expression = (
-        f"(( (value-2*pi ) if value > pi else value )-from_min_{axis})"
-        f"*(to_max_{axis}-to_min_{axis})"
-        f"/(from_max_{axis}-from_min_{axis})+to_min_{axis}"
-        f"+offset_{axis}"
-    )
+    driver.expression = f"(scale_{axis} * value) + radians(offset_{axis})"
 
     target_obj = bpy.data.objects[obj.name[:-2]]
 
     value = driver.variables.new()
     value.name = "value"
     value.targets[0].id = target_obj
-    value.targets[0].data_path = f"rotation_euler.{axis}"
+    value.targets[0].data_path = f"rotation_euler.{axis}".lower()
 
-    from_min = driver.variables.new()
-    from_min.name = f"from_min_{axis}"
-    from_min.targets[0].id = target_obj
-    from_min.targets[0].data_path = f'["from_min_{axis}"]'
-
-    from_max = driver.variables.new()
-    from_max.name = f"from_max_{axis}"
-    from_max.targets[0].id = target_obj
-    from_max.targets[0].data_path = f'["from_max_{axis}"]'
-
-    to_min = driver.variables.new()
-    to_min.name = f"to_min_{axis}"
-    to_min.targets[0].id = target_obj
-    to_min.targets[0].data_path = f'["to_min_{axis}"]'
-
-    to_max = driver.variables.new()
-    to_max.name = f"to_max_{axis}"
-    to_max.targets[0].id = target_obj
-    to_max.targets[0].data_path = f'["to_max_{axis}"]'
+    scale = driver.variables.new()
+    scale.name = f"scale_{axis}"
+    scale.targets[0].id = target_obj
+    scale.targets[0].data_path = f'["Scale {axis}"]'
 
     offset = driver.variables.new()
     offset.name = f"offset_{axis}"
     offset.targets[0].id = target_obj
-    offset.targets[0].data_path = f'["offset_{axis}"]'
+    offset.targets[0].data_path = f'["Offset {axis}"]'
+
+
+def tune_rotations():
+    objs = bpy.data.objects
+    for handedness in ["L", "R"]:
+        for finger in ["index_finger", "middle_finger", "ring_finger", "pinky"]:
+            objs[finger + "_mcp." + handedness]["Offset Z"] = -20.0
+            objs[finger + "_mcp." + handedness]["Scale X"] = 1.5
+            objs[finger + "_mcp." + handedness]["Offset X"] = 5.0
+
+    objs["thumb_cmc.L"]["Scale Z"] = 2.0
+    objs["thumb_cmc.L"]["Offset Z"] = -20.0
+    objs["thumb_cmc.R"]["Scale Z"] = 2.0
+    objs["thumb_cmc.R"]["Offset Z"] = 20.0
 
 
 def set_keyframes(hma_hands, frame_number):
@@ -238,7 +190,7 @@ def demo_rotate_bones():
     rig = bpy.data.objects["metarig"]
     for handedness in ["L", "R"]:
         for bone_name, lmk_name in bones.items():
-            empty_name = lmk_name + "." + handedness  # + ".D"
+            empty_name = lmk_name + "." + handedness + ".D"
 
             hma_rot = bpy.data.objects[empty_name].rotation_euler
 
