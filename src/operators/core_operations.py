@@ -138,46 +138,29 @@ def calculate_rotations(hma_hands):
 
             elif "pip" in landmark.name:
                 middle_phalanx = hand.landmarks[i + 1].position - landmark.position
+                prox_phalanx = landmark.position - hand.landmarks[i - 1].position
 
-                # get the local coordinates
-                middle_phalanx = np.matmul(middle_phalanx, hand.orientation)
+                middle_phalanx /= np.linalg.norm(middle_phalanx)
+                prox_phalanx /= np.linalg.norm(prox_phalanx)
 
-                # project on the xy plane
-                middle_phalanx[2] = 0.0
-
-                z_angle = np.arctan2(
-                    np.dot(np.cross(middle_phalanx, y_axis), z_axis),
-                    np.dot(middle_phalanx, y_axis),
-                )
-                z_angle = normalize_angle(z_angle)
-
-                # subtract the previous phalanx rotation
-                z_angle -= hand.landmarks[i - 1].rotation_euler[2]
-                z_angle = normalize_angle(z_angle)
+                cross = np.cross(middle_phalanx, prox_phalanx)
+                z_angle = np.arcsin(np.linalg.norm(cross))
+                if np.dot(cross, hand.orientation[:,[2]]) < 0:
+                    z_angle *= -1
 
                 landmark.rotation_euler = np.array([0.0, 0.0, z_angle])
 
             elif "dip" in landmark.name:
                 dist_phalanx = hand.landmarks[i + 1].position - landmark.position
+                middle_phalanx = landmark.position - hand.landmarks[i - 1].position
 
-                # get the local coordinates
-                dist_phalanx = np.matmul(dist_phalanx, hand.orientation)
+                dist_phalanx /= np.linalg.norm(dist_phalanx)
+                middle_phalanx /= np.linalg.norm(middle_phalanx)
 
-                # project on the xy plane
-                dist_phalanx[2] = 0.0
-
-                z_angle = np.arctan2(
-                    np.dot(np.cross(dist_phalanx, y_axis), z_axis),
-                    np.dot(dist_phalanx, y_axis),
-                )
-                z_angle = normalize_angle(z_angle)
-
-                # subtract the previous phalanxes rotation
-                z_angle -= (
-                    hand.landmarks[i - 1].rotation_euler[2]
-                    + hand.landmarks[i - 2].rotation_euler[2]
-                )
-                z_angle = normalize_angle(z_angle)
+                cross = np.cross(dist_phalanx, middle_phalanx)
+                z_angle = np.arcsin(np.linalg.norm(cross))
+                if np.dot(cross, hand.orientation[:,[2]]) < 0:
+                    z_angle *= -1
 
                 landmark.rotation_euler = np.array([0, 0, z_angle])
 
@@ -214,50 +197,30 @@ def calculate_thumb_rotations(landmark, index, hand):
 
     elif "mcp" in landmark.name:
         prox_phalanx = hand.landmarks[index + 1].position - landmark.position
+        metacarpal = landmark.position - hand.landmarks[index - 1].position
 
-        # get the local coordinates
-        prox_phalanx = np.matmul(prox_phalanx, hand.orientation)
+        prox_phalanx /= np.linalg.norm(prox_phalanx)
+        metacarpal /= np.linalg.norm(metacarpal)
 
-        # project on the yz plane
-        prox_phalanx[0] = 0.0
-
-        x_angle = np.arctan2(
-            np.dot(np.cross(prox_phalanx, y_axis), x_axis),
-            np.dot(prox_phalanx, y_axis),
-        )
-        if hand.handedness == "L":
-            x_angle *= -1.0
-        x_angle = normalize_angle(x_angle)
-
-        # subtract the previous phalanx rotation
-        x_angle -= hand.landmarks[index - 1].rotation_euler[0]
-        x_angle = normalize_angle(x_angle)
+        cross = np.cross(prox_phalanx, metacarpal)
+        x_angle = np.arcsin(np.linalg.norm(cross))
+        if np.dot(cross, hand.orientation[:,[0]]) > 0:
+            x_angle *= -1
 
         landmark.rotation_euler = np.array([x_angle, 0.0, 0.0])
 
     elif "_ip" in landmark.name:
         dist_phalanx = hand.landmarks[index + 1].position - landmark.position
+        prox_phalanx = landmark.position - hand.landmarks[index - 1].position
 
-        # get the local coordinates
-        dist_phalanx = np.matmul(dist_phalanx, hand.orientation)
+        dist_phalanx /= np.linalg.norm(dist_phalanx)
+        prox_phalanx /= np.linalg.norm(prox_phalanx)
 
-        # project on the yz plane
-        dist_phalanx[0] = 0.0
+        cross = np.cross(dist_phalanx, prox_phalanx)
+        x_angle = np.arcsin(np.linalg.norm(cross))
+        if np.dot(cross, hand.orientation[:,[0]]) > 0:
+            x_angle *= -1
 
-        x_angle = np.arctan2(
-            np.dot(np.cross(dist_phalanx, y_axis), x_axis),
-            np.dot(dist_phalanx, y_axis),
-        )
-        if hand.handedness == "L":
-            x_angle *= -1.0
-        x_angle = normalize_angle(x_angle)
-
-        # subtract the previous phalanxes rotation
-        x_angle -= (
-            hand.landmarks[index - 1].rotation_euler[0]
-            + hand.landmarks[index - 2].rotation_euler[0]
-        )
-        x_angle = normalize_angle(x_angle)
         landmark.rotation_euler = np.array([x_angle, 0.0, 0.0])
 
 
