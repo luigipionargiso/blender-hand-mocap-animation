@@ -17,10 +17,10 @@ class HMA_Properties(bpy.types.PropertyGroup):
         max=12,
     )
 
-    current_frame: bpy.props.IntProperty(
-        name="Current frame",
-        description="Current frame processed",
-        default=0,
+    smoothing_window_size: bpy.props.IntProperty(
+        name="Smoothing window size",
+        description="Number of frames over which to apply the Savitzky-Golay filter",
+        default=15,
         min=0,
     )
 

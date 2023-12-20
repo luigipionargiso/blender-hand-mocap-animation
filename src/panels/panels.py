@@ -16,6 +16,7 @@ class HMA_PT_Main_Panel(HMA_Base_Panel, bpy.types.Panel):
 
 
 class HTA_PT_Tracking_Panel(HMA_Base_Panel, bpy.types.Panel):
+    bl_idname = "UI_PT_tracking_panel"
     bl_parent_id = "UI_PT_main_panel"
     bl_label = "Motion capture"
 
@@ -34,6 +35,15 @@ class HTA_PT_Tracking_Panel(HMA_Base_Panel, bpy.types.Panel):
             layout.operator(
                 "hma.tracking_operator", text="Start recording", icon="RADIOBUT_OFF"
             )
+
+
+class HTA_PT_Advanced_Panel(HMA_Base_Panel, bpy.types.Panel):
+    bl_parent_id = "UI_PT_tracking_panel"
+    bl_label = "Advanced"
+    bl_options = {"DEFAULT_CLOSED"}
+
+    def draw(self, context):
+        self.layout.prop(context.scene.hta, "smoothing_window_size")
 
 
 class HMA_PT_Transfer_Panel(HMA_Base_Panel, bpy.types.Panel):
@@ -62,7 +72,12 @@ class HMA_PT_Transfer_Panel(HMA_Base_Panel, bpy.types.Panel):
         )
 
 
-classes = [HMA_PT_Main_Panel, HTA_PT_Tracking_Panel, HMA_PT_Transfer_Panel]
+classes = [
+    HMA_PT_Main_Panel,
+    HTA_PT_Tracking_Panel,
+    HTA_PT_Advanced_Panel,
+    HMA_PT_Transfer_Panel,
+]
 
 
 def register():

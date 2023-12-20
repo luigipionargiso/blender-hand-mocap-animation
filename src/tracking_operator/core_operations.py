@@ -13,7 +13,7 @@ def copy_to_hma_custom_structure(mp_results):
 
     # iterate through hands
     for i, mp_hand_landmarks in enumerate(mp_multi_hand):
-        # calculate handedness
+        # get handedness
         if mp_results.multi_handedness[i].classification[0].label == "Left":
             handedness = "L"
         else:
@@ -39,7 +39,7 @@ def copy_to_hma_custom_structure(mp_results):
 
 def calculate_positions(hma_hands):
     for hand in hma_hands:
-        # move the origin of axis to the wrist landmark position
+        # move the origin of axis to the wrist
         wrist_position = hand.landmarks[0].position
 
         for landmark in hand.landmarks:
@@ -84,7 +84,7 @@ def calculate_rotations(hma_hands):
 
     for hand in hma_hands:
         for i, landmark in enumerate(hand.landmarks):
-            # for debug purposes the wrist rotation matches the hand orientation
+            # the wrist rotation matches the hand orientation
             if landmark.name == "wrist":
                 matrix_data = hand.orientation.tolist()
                 rotation_euler = mathutils.Matrix(matrix_data).to_euler()
@@ -111,7 +111,6 @@ def calculate_rotations(hma_hands):
 
                 # calculate rotation around x axis
 
-                # take the vector onto the xy plane
                 rotation_matrix = np.array(
                     [
                         [np.cos(-z_angle), -np.sin(-z_angle), 0],
@@ -119,6 +118,8 @@ def calculate_rotations(hma_hands):
                         [0, 0, 1],
                     ]
                 )
+
+                # rotate the vector until it is on xy plane
                 rotated_phalanx = np.matmul(prox_phalanx, rotation_matrix)
 
                 x_angle = np.arctan2(
@@ -129,6 +130,7 @@ def calculate_rotations(hma_hands):
                 landmark.rotation_euler = np.array([x_angle, 0.0, z_angle])
 
             elif "pip" in landmark.name:
+                # calculate the angle between the current and the previous phalanx
                 middle_phalanx = hand.landmarks[i + 1].position - landmark.position
                 prox_phalanx = landmark.position - hand.landmarks[i - 1].position
 
@@ -137,12 +139,14 @@ def calculate_rotations(hma_hands):
 
                 cross = np.cross(middle_phalanx, prox_phalanx)
                 z_angle = np.arcsin(np.linalg.norm(cross))
-                if np.dot(cross, hand.orientation[:, [2]]) < 0:
+                right = hand.orientation[:, [2]]
+                if np.dot(cross, right) < 0:
                     z_angle *= -1
 
                 landmark.rotation_euler = np.array([0.0, 0.0, z_angle])
 
             elif "dip" in landmark.name:
+                # calculate the angle between the current and the previous phalanx
                 dist_phalanx = hand.landmarks[i + 1].position - landmark.position
                 middle_phalanx = landmark.position - hand.landmarks[i - 1].position
 
@@ -151,7 +155,8 @@ def calculate_rotations(hma_hands):
 
                 cross = np.cross(dist_phalanx, middle_phalanx)
                 z_angle = np.arcsin(np.linalg.norm(cross))
-                if np.dot(cross, hand.orientation[:, [2]]) < 0:
+                right = hand.orientation[:, [2]]
+                if np.dot(cross, right) < 0:
                     z_angle *= -1
 
                 landmark.rotation_euler = np.array([0, 0, z_angle])
@@ -188,6 +193,7 @@ def calculate_thumb_rotations(landmark, index, hand):
         landmark.rotation_euler = np.array([x_angle, 0.0, z_angle])
 
     elif "mcp" in landmark.name:
+        # calculate the angle between the current and the previous phalanx
         prox_phalanx = hand.landmarks[index + 1].position - landmark.position
         metacarpal = landmark.position - hand.landmarks[index - 1].position
 
@@ -196,7 +202,8 @@ def calculate_thumb_rotations(landmark, index, hand):
 
         cross = np.cross(prox_phalanx, metacarpal)
         x_angle = np.arcsin(np.linalg.norm(cross))
-        if np.dot(cross, hand.orientation[:, [0]]) > 0:
+        up = hand.orientation[:, [0]]
+        if np.dot(cross, up) > 0:
             x_angle *= -1
 
         if hand.handedness == "R":
@@ -205,6 +212,7 @@ def calculate_thumb_rotations(landmark, index, hand):
         landmark.rotation_euler = np.array([x_angle, 0.0, 0.0])
 
     elif "_ip" in landmark.name:
+        # calculate the angle between the current and the previous phalanx
         dist_phalanx = hand.landmarks[index + 1].position - landmark.position
         prox_phalanx = landmark.position - hand.landmarks[index - 1].position
 
@@ -213,7 +221,8 @@ def calculate_thumb_rotations(landmark, index, hand):
 
         cross = np.cross(dist_phalanx, prox_phalanx)
         x_angle = np.arcsin(np.linalg.norm(cross))
-        if np.dot(cross, hand.orientation[:, [0]]) > 0:
+        up = hand.orientation[:, [0]]
+        if np.dot(cross, up) > 0:
             x_angle *= -1
 
         if hand.handedness == "R":

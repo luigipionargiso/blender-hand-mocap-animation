@@ -1,8 +1,8 @@
 import bpy
 import cv2 as cv
 import mediapipe as mp
-from .empties_manager import create_empties_hierarchy, set_keyframes, demo_rotate_bones
 from .core_operations import *
+from .empties_manager import create_empties_hierarchy, set_keyframes
 from .smoothing import smooth_landmarks_over_time
 
 
@@ -14,10 +14,8 @@ class HMA_OT_TrackingOperator(bpy.types.Operator):
 
     _timer = None
     _cap = None
-
-    mp_drawing = mp.solutions.drawing_utils
-    mp_hands = mp.solutions.hands
     _hands = None
+    _current_frame = None
 
     @classmethod
     def poll(cls, context):
@@ -43,7 +41,9 @@ class HMA_OT_TrackingOperator(bpy.types.Operator):
             # smoothing landmarks position
             if results.multi_hand_world_landmarks is not None:
                 for hand_landmarks in results.multi_hand_world_landmarks:
-                    hand_landmarks = smooth_landmarks_over_time(hand_landmarks)
+                    hand_landmarks = smooth_landmarks_over_time(
+                        hand_landmarks, context.scene.hta.smoothing_window_size
+                    )
 
             hma_hands = copy_to_hma_custom_structure(results)
             calculate_positions(hma_hands)
@@ -51,19 +51,17 @@ class HMA_OT_TrackingOperator(bpy.types.Operator):
             calculate_rotations(hma_hands)
 
             # set position and rotation keyframes in empties
-            set_keyframes(hma_hands, 1)
-
-            demo_rotate_bones()
+            set_keyframes(hma_hands, self._current_frame)
+            self._current_frame += context.scene.hta.skip_frames + 1
 
             # Draw the hand annotations on the image
             frame = cv.cvtColor(frame, cv.COLOR_RGB2BGR)
             if results.multi_hand_landmarks:
                 for hand_landmarks in results.multi_hand_landmarks:
-                    self.mp_drawing.draw_landmarks(
-                        frame, hand_landmarks, self.mp_hands.HAND_CONNECTIONS
+                    mp.solutions.drawing_utils.draw_landmarks(
+                        frame, hand_landmarks, mp.solutions.hands.HAND_CONNECTIONS
                     )
             cv.imshow("Camera stream", frame)
-            context.scene.hta.current_frame += context.scene.hta.skip_frames + 1
             cv.waitKey(1)
 
         elif event.type in {"ESC"}:
@@ -89,8 +87,9 @@ class HMA_OT_TrackingOperator(bpy.types.Operator):
         else:
             user.modal_is_active = True
 
-        user.current_frame = 0
+        self._current_frame = 1
 
+        # initialize OpenCV video capture
         self._cap = cv.VideoCapture(user.camera_device_slot, cv.CAP_DSHOW)
 
         if not self._cap.isOpened():
@@ -105,26 +104,28 @@ class HMA_OT_TrackingOperator(bpy.types.Operator):
 
         cv.namedWindow("Camera stream")
 
+        # add timer event to capture frames
         actual_fps = context.scene.render.fps / context.scene.render.fps_base
         frame_duration = 1 / actual_fps
+
         if user.skip_frames > 0:
-            frame_duration = user.skip_frames * frame_duration
+            frame_duration *= user.skip_frames
+
         self._timer = context.window_manager.event_timer_add(
             frame_duration, window=context.window
         )
 
-        # Create a hands object
-        self._hands = self.mp_hands.Hands(
+        # create a Mediapipe Hands object
+        self._hands = mp.solutions.hands.Hands(
             model_complexity=1,
             static_image_mode=False,
             max_num_hands=2,
             min_detection_confidence=0.5,
             min_tracking_confidence=0.5,
         )
-
-        # Call the __enter__() method
         self._hands.__enter__()
 
+        # spawn empties representing landmarks
         create_empties_hierarchy()
 
         context.window_manager.modal_handler_add(self)

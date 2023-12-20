@@ -167,38 +167,3 @@ def set_keyframes(hma_hands, frame_number):
 
             obj.keyframe_insert(data_path="location", frame=frame_number)
             obj.keyframe_insert(data_path="rotation_euler", frame=frame_number)
-
-
-def demo_rotate_bones():
-    bones = {
-        "thumb.01": "thumb_cmc",
-        "thumb.02": "thumb_mcp",
-        "thumb.03": "thumb_ip",
-        "f_index.01": "index_finger_mcp",
-        "f_index.02": "index_finger_pip",
-        "f_index.03": "index_finger_dip",
-        "f_middle.01": "middle_finger_mcp",
-        "f_middle.02": "middle_finger_pip",
-        "f_middle.03": "middle_finger_dip",
-        "f_ring.01": "ring_finger_mcp",
-        "f_ring.02": "ring_finger_pip",
-        "f_ring.03": "ring_finger_dip",
-        "f_pinky.01": "pinky_mcp",
-        "f_pinky.02": "pinky_pip",
-        "f_pinky.03": "pinky_dip",
-    }
-    rig = bpy.data.objects["metarig"]
-    for handedness in ["L", "R"]:
-        for bone_name, lmk_name in bones.items():
-            empty_name = lmk_name + "." + handedness + ".D"
-
-            hma_rot = bpy.data.objects[empty_name].rotation_euler
-
-            if "thumb" in bone_name:
-                rig.pose.bones[bone_name + "." + handedness].rotation_euler = hma_rot
-            else:
-                rig.pose.bones[bone_name + "." + handedness].rotation_euler = [
-                    hma_rot[2],
-                    hma_rot[1],
-                    hma_rot[0],
-                ]
