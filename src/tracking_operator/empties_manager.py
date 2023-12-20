@@ -1,6 +1,5 @@
 import bpy
-import numpy as np
-from ..landmarks_names import *
+from ..hma_data import landmarks_names
 
 
 def create_empties_hierarchy():
@@ -60,26 +59,6 @@ def create_empties():
                 # remove from the scene collection
                 bpy.context.collection.objects.unlink(empty)
 
-                add_custom_properties(empty)
-
-
-def add_custom_properties(obj):
-    if "wrist" in obj.name:
-        return
-    elif "tip" in obj.name:
-        return
-    elif "thumb_mcp" in obj.name or "thumb_ip" in obj.name:
-        obj["Scale X"] = 1.0
-        obj["Offset X"] = 0.0
-    elif "thumb_cmc" in obj.name or "mcp" in obj.name:
-        obj["Scale X"] = 1.0
-        obj["Offset X"] = 0.0
-        obj["Scale Z"] = 1.0
-        obj["Offset Z"] = 0.0
-    else:
-        obj["Scale Z"] = 1.0
-        obj["Offset Z"] = 0.0
-
 
 def create_drivers_empties():
     for handedness in ["L", "R"]:
@@ -97,7 +76,26 @@ def create_drivers_empties():
                 # remove from the scene collection
                 bpy.context.collection.objects.unlink(empty)
 
+                add_custom_properties(empty)
                 add_drivers(empty)
+
+
+def add_custom_properties(obj):
+    if "wrist" in obj.name:
+        return
+    elif "tip" in obj.name:
+        return
+    elif "thumb_mcp" in obj.name or "thumb_ip" in obj.name:
+        obj["Scale X"] = 1.0
+        obj["Offset X"] = 0.0
+    elif "thumb_cmc" in obj.name or "mcp" in obj.name:
+        obj["Scale X"] = 1.0
+        obj["Offset X"] = 0.0
+        obj["Scale Z"] = 1.0
+        obj["Offset Z"] = 0.0
+    else:
+        obj["Scale X"] = 1.0
+        obj["Offset X"] = 0.0
 
 
 def add_drivers(obj):
@@ -111,7 +109,7 @@ def add_drivers(obj):
         add_driver_to_rotation(obj, "X")
         add_driver_to_rotation(obj, "Z")
     else:
-        add_driver_to_rotation(obj, "Z")
+        add_driver_to_rotation(obj, "X")
 
 
 def add_driver_to_rotation(obj, axis):
@@ -128,16 +126,24 @@ def add_driver_to_rotation(obj, axis):
     value = driver.variables.new()
     value.name = "value"
     value.targets[0].id = target_obj
-    value.targets[0].data_path = f"rotation_euler.{axis}".lower()
+    if "thumb" in obj.name:
+        value.targets[0].data_path = f"rotation_euler.{axis}".lower()
+    else:
+        # swap x and z axis for all fingers except for the thumb
+        if axis == "X":
+            empty_axis = "Z"
+        else:
+            empty_axis = "X"
+        value.targets[0].data_path = f"rotation_euler.{empty_axis}".lower()
 
     scale = driver.variables.new()
     scale.name = f"scale_{axis}"
-    scale.targets[0].id = target_obj
+    scale.targets[0].id = obj
     scale.targets[0].data_path = f'["Scale {axis}"]'
 
     offset = driver.variables.new()
     offset.name = f"offset_{axis}"
-    offset.targets[0].id = target_obj
+    offset.targets[0].id = obj
     offset.targets[0].data_path = f'["Offset {axis}"]'
 
 
@@ -145,14 +151,14 @@ def tune_rotations():
     objs = bpy.data.objects
     for handedness in ["L", "R"]:
         for finger in ["index_finger", "middle_finger", "ring_finger", "pinky"]:
-            objs[finger + "_mcp." + handedness]["Offset Z"] = -20.0
-            objs[finger + "_mcp." + handedness]["Scale X"] = 1.5
-            objs[finger + "_mcp." + handedness]["Offset X"] = 5.0
+            objs[finger + "_mcp." + handedness + ".D"]["Offset X"] = -20.0
+            objs[finger + "_mcp." + handedness + ".D"]["Scale Z"] = 1.5
+            objs[finger + "_mcp." + handedness + ".D"]["Offset Z"] = 5.0
 
-    objs["thumb_cmc.L"]["Scale Z"] = 2.0
-    objs["thumb_cmc.L"]["Offset Z"] = -20.0
-    objs["thumb_cmc.R"]["Scale Z"] = 2.0
-    objs["thumb_cmc.R"]["Offset Z"] = 20.0
+    objs["thumb_cmc.L.D"]["Scale Z"] = 2.0
+    objs["thumb_cmc.L.D"]["Offset Z"] = -20.0
+    objs["thumb_cmc.R.D"]["Scale Z"] = 2.0
+    objs["thumb_cmc.R.D"]["Offset Z"] = 20.0
 
 
 def set_keyframes(hma_hands, frame_number):

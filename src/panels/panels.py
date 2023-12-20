@@ -15,14 +15,14 @@ class HMA_PT_Main_Panel(HMA_Base_Panel, bpy.types.Panel):
         pass
 
 
-class HTA_PT_Tracking_Panel(HMA_Base_Panel, bpy.types.Panel):
+class HMA_PT_Tracking_Panel(HMA_Base_Panel, bpy.types.Panel):
     bl_idname = "UI_PT_tracking_panel"
     bl_parent_id = "UI_PT_main_panel"
     bl_label = "Motion capture"
 
     def draw(self, context):
         layout = self.layout
-        user = context.scene.hta
+        user = context.scene.hma
 
         layout.prop(user, "camera_device_slot")
         layout.prop(user, "skip_frames")
@@ -37,13 +37,13 @@ class HTA_PT_Tracking_Panel(HMA_Base_Panel, bpy.types.Panel):
             )
 
 
-class HTA_PT_Advanced_Panel(HMA_Base_Panel, bpy.types.Panel):
+class HMA_PT_Advanced_Panel(HMA_Base_Panel, bpy.types.Panel):
     bl_parent_id = "UI_PT_tracking_panel"
     bl_label = "Advanced"
     bl_options = {"DEFAULT_CLOSED"}
 
     def draw(self, context):
-        self.layout.prop(context.scene.hta, "smoothing_window_size")
+        self.layout.prop(context.scene.hma, "smoothing_window_size")
 
 
 class HMA_PT_Transfer_Panel(HMA_Base_Panel, bpy.types.Panel):
@@ -52,7 +52,7 @@ class HMA_PT_Transfer_Panel(HMA_Base_Panel, bpy.types.Panel):
 
     def draw(self, context):
         layout = self.layout
-        user = context.scene.hta
+        user = context.scene.hma
 
         # Armature object picker
         layout.prop_search(
@@ -71,11 +71,15 @@ class HMA_PT_Transfer_Panel(HMA_Base_Panel, bpy.types.Panel):
             search_property="collections",
         )
 
+        layout.operator(
+                "hma.transfer_operator", text="Transfer animation", icon="HAND"
+            )
+
 
 classes = [
     HMA_PT_Main_Panel,
-    HTA_PT_Tracking_Panel,
-    HTA_PT_Advanced_Panel,
+    HMA_PT_Tracking_Panel,
+    HMA_PT_Advanced_Panel,
     HMA_PT_Transfer_Panel,
 ]
 

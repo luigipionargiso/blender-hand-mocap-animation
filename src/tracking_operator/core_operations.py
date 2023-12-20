@@ -1,6 +1,6 @@
 import numpy as np
 import mathutils
-from ..landmarks_names import *
+from ..hma_data import landmarks_names
 
 
 def copy_to_hma_custom_structure(mp_results):

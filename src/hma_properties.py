@@ -21,7 +21,7 @@ class HMA_Properties(bpy.types.PropertyGroup):
         name="Smoothing window size",
         description="Number of frames over which to apply the Savitzky-Golay filter",
         default=15,
-        min=0,
+        min=4,
     )
 
     def is_armature(self, object):
@@ -32,16 +32,13 @@ class HMA_Properties(bpy.types.PropertyGroup):
     selected_rig: bpy.props.PointerProperty(
         name="Transfer to rig",
         type=bpy.types.Object,
-        description="Select an armature for animation transfer",
+        description="Select an armature to apply the bone constraints on",
         poll=is_armature,
     )
 
-    def hta_collection_poll(self, col):
-        return col.name.startswith("hta_")
-
     drivers_collection: bpy.props.PointerProperty(
-        name="Drivers Collection",
-        description="Select a collection of drivers",
+        name="Drivers Collections",
+        description="Select one o more collections of drivers",
         type=bpy.types.Collection,
     )
 
@@ -50,9 +47,9 @@ class HMA_Properties(bpy.types.PropertyGroup):
 
 def register():
     bpy.utils.register_class(HMA_Properties)
-    bpy.types.Scene.hta = bpy.props.PointerProperty(type=HMA_Properties)
+    bpy.types.Scene.hma = bpy.props.PointerProperty(type=HMA_Properties)
 
 
 def unregister():
-    del bpy.types.Scene.hta
+    del bpy.types.Scene.hma
     bpy.utils.unregister_class(HMA_Properties)

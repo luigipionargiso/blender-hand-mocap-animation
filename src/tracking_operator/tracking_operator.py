@@ -42,7 +42,7 @@ class HMA_OT_TrackingOperator(bpy.types.Operator):
             if results.multi_hand_world_landmarks is not None:
                 for hand_landmarks in results.multi_hand_world_landmarks:
                     hand_landmarks = smooth_landmarks_over_time(
-                        hand_landmarks, context.scene.hta.smoothing_window_size
+                        hand_landmarks, context.scene.hma.smoothing_window_size
                     )
 
             hma_hands = copy_to_hma_custom_structure(results)
@@ -52,7 +52,7 @@ class HMA_OT_TrackingOperator(bpy.types.Operator):
 
             # set position and rotation keyframes in empties
             set_keyframes(hma_hands, self._current_frame)
-            self._current_frame += context.scene.hta.skip_frames + 1
+            self._current_frame += context.scene.hma.skip_frames + 1
 
             # Draw the hand annotations on the image
             frame = cv.cvtColor(frame, cv.COLOR_RGB2BGR)
@@ -72,14 +72,14 @@ class HMA_OT_TrackingOperator(bpy.types.Operator):
             self.cancel(context)
             return {"CANCELLED"}
 
-        elif context.scene.hta.modal_is_active is False:
+        elif context.scene.hma.modal_is_active is False:
             self.cancel(context)
             return {"FINISHED"}
 
         return {"PASS_THROUGH"}
 
     def invoke(self, context, event):
-        user = context.scene.hta
+        user = context.scene.hma
 
         if user.modal_is_active is True:
             user.modal_is_active = False
@@ -136,7 +136,7 @@ class HMA_OT_TrackingOperator(bpy.types.Operator):
         context.window_manager.event_timer_remove(self._timer)
         self._cap.release()
         cv.destroyAllWindows()
-        context.scene.hta.modal_is_active = False
+        context.scene.hma.modal_is_active = False
         self._hands.__exit__(None, None, None)
 
 

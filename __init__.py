@@ -1,5 +1,6 @@
 from .src import hma_properties
 from .src.tracking_operator import tracking_operator
+from .src.transfer_operator import transfer_operator
 from .src.panels import panels
 
 
@@ -14,7 +15,7 @@ bl_info = {
     "category": "Animation",
 }
 
-modules = [hma_properties, tracking_operator, panels]
+modules = [hma_properties, tracking_operator, transfer_operator, panels]
 
 
 def register():
