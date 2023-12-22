@@ -71,9 +71,7 @@ class HMA_PT_Transfer_Panel(HMA_Base_Panel, bpy.types.Panel):
             search_property="collections",
         )
 
-        layout.operator(
-                "hma.transfer_operator", text="Transfer animation", icon="HAND"
-            )
+        layout.operator("hma.transfer_operator", text="Transfer animation", icon="HAND")
 
 
 classes = [
